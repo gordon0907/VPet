@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using static VPet_Simulator.Core.GraphHelper;
 using static VPet_Simulator.Core.GraphInfo;
 using static VPet_Simulator.Core.WorkTimer.FinishWorkInfo;
@@ -134,6 +135,18 @@ namespace VPet_Simulator.Core
                     Stop(() => m.SayRnd(LocalizeCore.Translate("{2}完成啦, 累计获得 {0:f2} 经验\n共计花费了{1}分钟", fwi.count,
                         fwi.spendtime, fwi.work.NameTrans), true), StopReason.TimeFinish);
                 }
+                
+                // 自動開始下一輪工作
+                var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+                timer.Tick += (s, e) => {
+                    timer.Stop();
+                    
+                    if (m.State == Main.WorkingState.Nomal && m.StartWork(m.NowWork)) {
+                        m.SayRnd($"已自動開始新的{m.NowWork.NameTrans}");
+                    }
+                };
+                timer.Start();
+                
                 return;
             }
             else
